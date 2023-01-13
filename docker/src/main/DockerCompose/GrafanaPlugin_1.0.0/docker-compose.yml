@@ -1,0 +1,44 @@
+# docker-compose-1c1d.yml
+version: "3"
+services:
+  iotdb-service:
+    image: apache/iotdb:1.0.0-standalone
+    hostname: iotdb-service
+    container_name: iotdb-service
+    ports:
+      - "6667:6667"
+      - "18080:18080"
+    environment:
+      - enable_rest_service=true
+      - rest_service_port=18080
+      - cn_internal_address=iotdb-service
+      - cn_internal_port=22277
+      - cn_target_config_node_list=iotdb-service:22277
+      - dn_rpc_address=iotdb-service
+      - dn_internal_address=iotdb-service
+      - dn_target_config_node_list=iotdb-service:22277
+    networks:
+      iotdb:
+        ipv4_address: 172.40.0.2
+  grafana:
+    image: grafana/grafana:8.2.5
+    ports:
+      - 3000:3000
+    # Advised to download volumes from the official address, decompress them to a directory, and then bind them using volumes
+    # https://dlcdn.apache.org/iotdb/1.0.0/apache-iotdb-1.0.0-grafana-plugin-bin.zip
+    volumes: 
+      - /root/iotdb/grafana-plugin/:/usr/share/grafana/plugins-bundled/internal/iotdb-datasource
+    # Another way, But may be problems in some problem
+    # environment:
+    #  - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=iotdb
+    #  - GF_INSTALL_PLUGINS=https://mirrors.tuna.tsinghua.edu.cn/apache/iotdb/1.0.0/apache-iotdb-1.0.0-grafana-plugin-bin.zip;apache-iotdb-1.0.0-grafana-plugin-bin
+    networks:
+      iotdb:
+        ipv4_address: 172.40.0.3
+networks:
+  iotdb:
+    driver: bridge
+    ipam: 
+      config: 
+        - subnet: 172.40.0.0/16
+          gateway: 172.40.0.1
